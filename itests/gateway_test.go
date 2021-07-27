@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"net"
 	"testing"
 	"time"
 
@@ -193,7 +192,7 @@ func TestGatewayDealFlow(t *testing.T) {
 	// so that the deal starts sealing in time
 	dealStartEpoch := abi.ChainEpoch(2 << 12)
 
-	dh := kit.NewDealHarness(t, nodes.lite, nodes.miner, nodes.miner)
+	dh := kit.NewDealHarness(t, nodes.lite, nodes.miner)
 	dealCid, res, _ := dh.MakeOnlineDeal(context.Background(), kit.MakeFullDealParams{
 		Rseed:      6,
 		StartEpoch: dealStartEpoch,
@@ -271,10 +270,7 @@ func startNodes(
 	handler, err := gateway.Handler(gwapi)
 	require.NoError(t, err)
 
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	require.NoError(t, err)
-
-	srv, _ := kit.CreateRPCServer(t, handler, l)
+	srv, _ := kit.CreateRPCServer(t, handler)
 
 	// Create a gateway client API that connects to the gateway server
 	var gapi api.Gateway

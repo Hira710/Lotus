@@ -161,10 +161,9 @@ var sectorsListCmd = &cli.Command{
 			Usage: "show removed sectors",
 		},
 		&cli.BoolFlag{
-			Name:        "color",
-			Usage:       "use color in display output",
-			DefaultText: "depends on output being a TTY",
-			Aliases:     []string{"c"},
+			Name:    "color",
+			Aliases: []string{"c"},
+			Value:   true,
 		},
 		&cli.BoolFlag{
 			Name:  "fast",
@@ -184,9 +183,7 @@ var sectorsListCmd = &cli.Command{
 		},
 	},
 	Action: func(cctx *cli.Context) error {
-		if cctx.IsSet("color") {
-			color.NoColor = !cctx.Bool("color")
-		}
+		color.NoColor = !cctx.Bool("color")
 
 		nodeApi, closer, err := lcli.GetStorageMinerAPI(cctx)
 		if err != nil {
@@ -440,12 +437,6 @@ var sectorsExtendCmd = &cli.Command{
 			Required: false,
 		},
 		&cli.Int64Flag{
-			Name:     "expiration-ignore",
-			Value:    120,
-			Usage:    "when extending v1 sectors, skip sectors whose current expiration is less than <ignore> epochs from now",
-			Required: false,
-		},
-		&cli.Int64Flag{
 			Name:     "expiration-cutoff",
 			Usage:    "when extending v1 sectors, skip sectors whose current expiration is more than <cutoff> epochs from now (infinity if unspecified)",
 			Required: false,
@@ -503,10 +494,6 @@ var sectorsExtendCmd = &cli.Command{
 					continue
 				}
 
-				if si.Expiration < (head.Height() + abi.ChainEpoch(cctx.Int64("expiration-ignore"))) {
-					continue
-				}
-
 				if cctx.IsSet("expiration-cutoff") {
 					if si.Expiration > (head.Height() + abi.ChainEpoch(cctx.Int64("expiration-cutoff"))) {
 						continue
@@ -521,10 +508,6 @@ var sectorsExtendCmd = &cli.Command{
 
 				// Set the new expiration to 48 hours less than the theoretical maximum lifetime
 				newExp := ml - (miner3.WPoStProvingPeriod * 2) + si.Activation
-				if withinTolerance(si.Expiration, newExp) || si.Expiration >= newExp {
-					continue
-				}
-
 				p, err := api.StateSectorPartition(ctx, maddr, si.SectorNumber, types.EmptyTSK)
 				if err != nil {
 					return xerrors.Errorf("getting sector location for sector %d: %w", si.SectorNumber, err)
@@ -542,7 +525,7 @@ var sectorsExtendCmd = &cli.Command{
 				} else {
 					added := false
 					for exp := range es {
-						if withinTolerance(exp, newExp) && newExp >= exp && exp > si.Expiration {
+						if withinTolerance(exp, newExp) {
 							es[exp] = append(es[exp], uint64(si.SectorNumber))
 							added = true
 							break

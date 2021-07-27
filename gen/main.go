@@ -53,8 +53,6 @@ func main() {
 		api.SealedRefs{},
 		api.SealTicket{},
 		api.SealSeed{},
-		api.PieceDealInfo{},
-		api.DealSchedule{},
 	)
 	if err != nil {
 		fmt.Println(err)

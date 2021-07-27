@@ -17,7 +17,6 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/cbor"
-	"github.com/filecoin-project/go-state-types/network"
 
 	builtin0 "github.com/filecoin-project/specs-actors/actors/builtin"
 	init2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/init"
@@ -122,7 +121,7 @@ func TestForkHeightTriggers(t *testing.T) {
 
 	sm, err := NewStateManagerWithUpgradeSchedule(
 		cg.ChainStore(), UpgradeSchedule{{
-			Network: network.Version1,
+			Network: 1,
 			Height:  testForkHeight,
 			Migration: func(ctx context.Context, sm *StateManager, cache MigrationCache, cb ExecMonitor,
 				root cid.Cid, height abi.ChainEpoch, ts *types.TipSet) (cid.Cid, error) {
@@ -251,7 +250,7 @@ func TestForkRefuseCall(t *testing.T) {
 
 	sm, err := NewStateManagerWithUpgradeSchedule(
 		cg.ChainStore(), UpgradeSchedule{{
-			Network:   network.Version1,
+			Network:   1,
 			Expensive: true,
 			Height:    testForkHeight,
 			Migration: func(ctx context.Context, sm *StateManager, cache MigrationCache, cb ExecMonitor,
@@ -298,26 +297,22 @@ func TestForkRefuseCall(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		pts, err := cg.ChainStore().LoadTipSet(ts.TipSet.TipSet().Parents())
-		require.NoError(t, err)
-		parentHeight := pts.Height()
-		currentHeight := ts.TipSet.TipSet().Height()
-
-		// CallWithGas calls _at_ the current tipset.
 		ret, err := sm.CallWithGas(ctx, m, nil, ts.TipSet.TipSet())
-		if parentHeight <= testForkHeight && currentHeight >= testForkHeight {
+		switch ts.TipSet.TipSet().Height() {
+		case testForkHeight, testForkHeight + 1:
 			// If I had a fork, or I _will_ have a fork, it should fail.
 			require.Equal(t, ErrExpensiveFork, err)
-		} else {
+		default:
 			require.NoError(t, err)
 			require.True(t, ret.MsgRct.ExitCode.IsSuccess())
 		}
-
-		// Call always applies the message to the "next block" after the tipset's parent state.
+		// Call just runs on the parent state for a tipset, so we only
+		// expect an error at the fork height.
 		ret, err = sm.Call(ctx, m, ts.TipSet.TipSet())
-		if parentHeight == testForkHeight {
+		switch ts.TipSet.TipSet().Height() {
+		case testForkHeight + 1:
 			require.Equal(t, ErrExpensiveFork, err)
-		} else {
+		default:
 			require.NoError(t, err)
 			require.True(t, ret.MsgRct.ExitCode.IsSuccess())
 		}
@@ -366,7 +361,7 @@ func TestForkPreMigration(t *testing.T) {
 
 	sm, err := NewStateManagerWithUpgradeSchedule(
 		cg.ChainStore(), UpgradeSchedule{{
-			Network: network.Version1,
+			Network: 1,
 			Height:  testForkHeight,
 			Migration: func(ctx context.Context, sm *StateManager, cache MigrationCache, cb ExecMonitor,
 				root cid.Cid, height abi.ChainEpoch, ts *types.TipSet) (cid.Cid, error) {

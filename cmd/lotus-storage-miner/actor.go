@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	rlepluslazy "github.com/filecoin-project/go-bitfield/rle"
 	cbor "github.com/ipfs/go-ipld-cbor"
 
 	"github.com/fatih/color"
@@ -15,7 +14,6 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/go-bitfield"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 
@@ -43,7 +41,6 @@ var actorCmd = &cli.Command{
 		actorControl,
 		actorProposeChangeWorker,
 		actorConfirmChangeWorker,
-		actorCompactAllocatedCmd,
 	},
 }
 
@@ -391,15 +388,12 @@ var actorControlList = &cli.Command{
 			Name: "verbose",
 		},
 		&cli.BoolFlag{
-			Name:        "color",
-			Usage:       "use color in display output",
-			DefaultText: "depends on output being a TTY",
+			Name:  "color",
+			Value: true,
 		},
 	},
 	Action: func(cctx *cli.Context) error {
-		if cctx.IsSet("color") {
-			color.NoColor = !cctx.Bool("color")
-		}
+		color.NoColor = !cctx.Bool("color")
 
 		nodeApi, closer, err := lcli.GetStorageMinerAPI(cctx)
 		if err != nil {
@@ -441,7 +435,6 @@ var actorControlList = &cli.Command{
 		commit := map[address.Address]struct{}{}
 		precommit := map[address.Address]struct{}{}
 		terminate := map[address.Address]struct{}{}
-		dealPublish := map[address.Address]struct{}{}
 		post := map[address.Address]struct{}{}
 
 		for _, ca := range mi.ControlAddresses {
@@ -476,16 +469,6 @@ var actorControlList = &cli.Command{
 
 			delete(post, ca)
 			terminate[ca] = struct{}{}
-		}
-
-		for _, ca := range ac.DealPublishControl {
-			ca, err := api.StateLookupID(ctx, ca, types.EmptyTSK)
-			if err != nil {
-				return err
-			}
-
-			delete(post, ca)
-			dealPublish[ca] = struct{}{}
 		}
 
 		printKey := func(name string, a address.Address) {
@@ -531,9 +514,6 @@ var actorControlList = &cli.Command{
 			}
 			if _, ok := terminate[a]; ok {
 				uses = append(uses, color.YellowString("terminate"))
-			}
-			if _, ok := dealPublish[a]; ok {
-				uses = append(uses, color.MagentaString("deals"))
 			}
 
 			tw.Write(map[string]interface{}{
@@ -985,157 +965,6 @@ var actorConfirmChangeWorker = &cli.Command{
 		}
 		if mi.Worker != newAddr {
 			return fmt.Errorf("Confirmed worker address change not reflected on chain: expected '%s', found '%s'", newAddr, mi.Worker)
-		}
-
-		return nil
-	},
-}
-
-var actorCompactAllocatedCmd = &cli.Command{
-	Name:  "compact-allocated",
-	Usage: "compact allocated sectors bitfield",
-	Flags: []cli.Flag{
-		&cli.Uint64Flag{
-			Name:  "mask-last-offset",
-			Usage: "Mask sector IDs from 0 to 'higest_allocated - offset'",
-		},
-		&cli.Uint64Flag{
-			Name:  "mask-upto-n",
-			Usage: "Mask sector IDs from 0 to 'n'",
-		},
-		&cli.BoolFlag{
-			Name:  "really-do-it",
-			Usage: "Actually send transaction performing the action",
-			Value: false,
-		},
-	},
-	Action: func(cctx *cli.Context) error {
-		if !cctx.Bool("really-do-it") {
-			fmt.Println("Pass --really-do-it to actually execute this action")
-			return nil
-		}
-
-		if !cctx.Args().Present() {
-			return fmt.Errorf("must pass address of new owner address")
-		}
-
-		nodeApi, closer, err := lcli.GetStorageMinerAPI(cctx)
-		if err != nil {
-			return err
-		}
-		defer closer()
-
-		api, acloser, err := lcli.GetFullNodeAPI(cctx)
-		if err != nil {
-			return err
-		}
-		defer acloser()
-
-		ctx := lcli.ReqContext(cctx)
-
-		maddr, err := nodeApi.ActorAddress(ctx)
-		if err != nil {
-			return err
-		}
-
-		mact, err := api.StateGetActor(ctx, maddr, types.EmptyTSK)
-		if err != nil {
-			return err
-		}
-
-		store := adt.WrapStore(ctx, cbor.NewCborStore(blockstore.NewAPIBlockstore(api)))
-
-		mst, err := miner.Load(store, mact)
-		if err != nil {
-			return err
-		}
-
-		allocs, err := mst.GetAllocatedSectors()
-		if err != nil {
-			return err
-		}
-
-		var maskBf bitfield.BitField
-
-		{
-			exclusiveFlags := []string{"mask-last-offset", "mask-upto-n"}
-			hasFlag := false
-			for _, f := range exclusiveFlags {
-				if hasFlag && cctx.IsSet(f) {
-					return xerrors.Errorf("more than one 'mask` flag set")
-				}
-				hasFlag = hasFlag || cctx.IsSet(f)
-			}
-		}
-		switch {
-		case cctx.IsSet("mask-last-offset"):
-			last, err := allocs.Last()
-			if err != nil {
-				return err
-			}
-
-			m := cctx.Uint64("mask-last-offset")
-			if last <= m+1 {
-				return xerrors.Errorf("highest allocated sector lower than mask offset %d: %d", m+1, last)
-			}
-			// securty to not brick a miner
-			if last > 1<<60 {
-				return xerrors.Errorf("very high last sector number, refusing to mask: %d", last)
-			}
-
-			maskBf, err = bitfield.NewFromIter(&rlepluslazy.RunSliceIterator{
-				Runs: []rlepluslazy.Run{{Val: true, Len: last - m}}})
-			if err != nil {
-				return xerrors.Errorf("forming bitfield: %w", err)
-			}
-		case cctx.IsSet("mask-upto-n"):
-			n := cctx.Uint64("mask-upto-n")
-			maskBf, err = bitfield.NewFromIter(&rlepluslazy.RunSliceIterator{
-				Runs: []rlepluslazy.Run{{Val: true, Len: n}}})
-			if err != nil {
-				return xerrors.Errorf("forming bitfield: %w", err)
-			}
-		default:
-			return xerrors.Errorf("no 'mask' flags set")
-		}
-
-		mi, err := api.StateMinerInfo(ctx, maddr, types.EmptyTSK)
-		if err != nil {
-			return err
-		}
-
-		params := &miner2.CompactSectorNumbersParams{
-			MaskSectorNumbers: maskBf,
-		}
-
-		sp, err := actors.SerializeParams(params)
-		if err != nil {
-			return xerrors.Errorf("serializing params: %w", err)
-		}
-
-		smsg, err := api.MpoolPushMessage(ctx, &types.Message{
-			From:   mi.Worker,
-			To:     maddr,
-			Method: miner.Methods.CompactSectorNumbers,
-			Value:  big.Zero(),
-			Params: sp,
-		}, nil)
-		if err != nil {
-			return xerrors.Errorf("mpool push: %w", err)
-		}
-
-		fmt.Println("CompactSectorNumbers Message CID:", smsg.Cid())
-
-		// wait for it to get mined into a block
-		wait, err := api.StateWaitMsg(ctx, smsg.Cid(), build.MessageConfidence)
-		if err != nil {
-			return err
-		}
-
-		// check it executed successfully
-		if wait.Receipt.ExitCode != 0 {
-			fmt.Println("Propose owner change failed!")
-			return err
 		}
 
 		return nil

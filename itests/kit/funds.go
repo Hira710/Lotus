@@ -4,10 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/ipfs/go-cid"
+	"github.com/stretchr/testify/require"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/lotus/api"
@@ -29,12 +27,8 @@ func SendFunds(ctx context.Context, t *testing.T, sender *TestFullNode, recipien
 	sm, err := sender.MpoolPushMessage(ctx, msg, nil)
 	require.NoError(t, err)
 
-	sender.WaitMsg(ctx, sm.Cid())
-}
+	res, err := sender.StateWaitMsg(ctx, sm.Cid(), 3, api.LookbackNoLimit, true)
+	require.NoError(t, err)
 
-func (f *TestFullNode) WaitMsg(ctx context.Context, msg cid.Cid) {
-	res, err := f.StateWaitMsg(ctx, msg, 3, api.LookbackNoLimit, true)
-	require.NoError(f.t, err)
-
-	require.EqualValues(f.t, 0, res.Receipt.ExitCode, "message did not successfully execute")
+	require.EqualValues(t, 0, res.Receipt.ExitCode, "did not successfully send funds")
 }

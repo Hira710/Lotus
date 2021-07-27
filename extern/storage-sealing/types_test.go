@@ -10,7 +10,6 @@ import (
 
 	cborutil "github.com/filecoin-project/go-cbor-util"
 	"github.com/filecoin-project/go-state-types/abi"
-	api "github.com/filecoin-project/lotus/api"
 	market2 "github.com/filecoin-project/specs-actors/v2/actors/builtin/market"
 	tutils "github.com/filecoin-project/specs-actors/v2/support/testing"
 )
@@ -23,9 +22,9 @@ func TestSectorInfoSerialization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	dealInfo := api.PieceDealInfo{
+	dealInfo := DealInfo{
 		DealID: d,
-		DealSchedule: api.DealSchedule{
+		DealSchedule: DealSchedule{
 			StartEpoch: 0,
 			EndEpoch:   100,
 		},

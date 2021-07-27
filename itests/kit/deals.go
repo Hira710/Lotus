@@ -28,8 +28,7 @@ import (
 type DealHarness struct {
 	t      *testing.T
 	client *TestFullNode
-	main   *TestMiner
-	market *TestMiner
+	miner  *TestMiner
 }
 
 type MakeFullDealParams struct {
@@ -63,12 +62,11 @@ type MakeFullDealParams struct {
 }
 
 // NewDealHarness creates a test harness that contains testing utilities for deals.
-func NewDealHarness(t *testing.T, client *TestFullNode, main *TestMiner, market *TestMiner) *DealHarness {
+func NewDealHarness(t *testing.T, client *TestFullNode, miner *TestMiner) *DealHarness {
 	return &DealHarness{
 		t:      t,
 		client: client,
-		main:   main,
-		market: market,
+		miner:  miner,
 	}
 }
 
@@ -99,7 +97,7 @@ func (dh *DealHarness) MakeOnlineDeal(ctx context.Context, params MakeFullDealPa
 
 // StartDeal starts a storage deal between the client and the miner.
 func (dh *DealHarness) StartDeal(ctx context.Context, fcid cid.Cid, fastRet bool, startEpoch abi.ChainEpoch) *cid.Cid {
-	maddr, err := dh.main.ActorAddress(ctx)
+	maddr, err := dh.miner.ActorAddress(ctx)
 	require.NoError(dh.t, err)
 
 	addr, err := dh.client.WalletDefaultAddress(ctx)
@@ -148,7 +146,7 @@ loop:
 			break loop
 		}
 
-		mds, err := dh.market.MarketListIncompleteDeals(ctx)
+		mds, err := dh.miner.MarketListIncompleteDeals(ctx)
 		require.NoError(dh.t, err)
 
 		var minerState storagemarket.StorageDealStatus
@@ -172,7 +170,7 @@ func (dh *DealHarness) WaitDealPublished(ctx context.Context, deal *cid.Cid) {
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	updates, err := dh.market.MarketGetDealUpdates(subCtx)
+	updates, err := dh.miner.MarketGetDealUpdates(subCtx)
 	require.NoError(dh.t, err)
 
 	for {
@@ -199,19 +197,19 @@ func (dh *DealHarness) WaitDealPublished(ctx context.Context, deal *cid.Cid) {
 }
 
 func (dh *DealHarness) StartSealingWaiting(ctx context.Context) {
-	snums, err := dh.main.SectorsList(ctx)
+	snums, err := dh.miner.SectorsList(ctx)
 	require.NoError(dh.t, err)
 
 	for _, snum := range snums {
-		si, err := dh.main.SectorsStatus(ctx, snum, false)
+		si, err := dh.miner.SectorsStatus(ctx, snum, false)
 		require.NoError(dh.t, err)
 
 		dh.t.Logf("Sector state: %s", si.State)
 		if si.State == api.SectorState(sealing.WaitDeals) {
-			require.NoError(dh.t, dh.main.SectorStartSealing(ctx, snum))
+			require.NoError(dh.t, dh.miner.SectorStartSealing(ctx, snum))
 		}
 
-		dh.main.FlushSealingBatches(ctx)
+		dh.miner.FlushSealingBatches(ctx)
 	}
 }
 
@@ -292,7 +290,6 @@ func (dh *DealHarness) RunConcurrentDeals(opts RunConcurrentDealsOpts) {
 	for i := 0; i < opts.N; i++ {
 		i := i
 		errgrp.Go(func() (err error) {
-			defer dh.t.Logf("finished concurrent deal %d/%d", i, opts.N)
 			defer func() {
 				// This is necessary because golang can't deal with test
 				// failures being reported from children goroutines ¯\_(ツ)_/¯
@@ -300,17 +297,11 @@ func (dh *DealHarness) RunConcurrentDeals(opts RunConcurrentDealsOpts) {
 					err = fmt.Errorf("deal failed: %s", r)
 				}
 			}()
-
-			dh.t.Logf("making storage deal %d/%d", i, opts.N)
-
 			deal, res, inPath := dh.MakeOnlineDeal(context.Background(), MakeFullDealParams{
 				Rseed:      5 + i,
 				FastRet:    opts.FastRetrieval,
 				StartEpoch: opts.StartEpoch,
 			})
-
-			dh.t.Logf("retrieving deal %d/%d", i, opts.N)
-
 			outPath := dh.PerformRetrieval(context.Background(), deal, res.Root, opts.CarExport)
 			AssertFilesEqual(dh.t, inPath, outPath)
 			return nil

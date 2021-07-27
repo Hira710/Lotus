@@ -7,12 +7,11 @@ USAGE:
    lotus [global options] command [command options] [arguments...]
 
 VERSION:
-   1.11.1-dev
+   1.11.0
 
 COMMANDS:
    daemon   Start a lotus daemon process
    backup   Create node metadata backup
-   config   Manage node config
    version  Print version
    help, h  Shows a list of commands or help for one command
    BASIC:
@@ -106,53 +105,6 @@ this command must be within this base path
 OPTIONS:
    --offline   create backup without the node running (default: false)
    --help, -h  show help (default: false)
-   
-```
-
-## lotus config
-```
-NAME:
-   lotus config - Manage node config
-
-USAGE:
-   lotus config command [command options] [arguments...]
-
-COMMANDS:
-   default  Print default node config
-   updated  Print updated node config
-   help, h  Shows a list of commands or help for one command
-
-OPTIONS:
-   --help, -h     show help (default: false)
-   --version, -v  print the version (default: false)
-   
-```
-
-### lotus config default
-```
-NAME:
-   lotus config default - Print default node config
-
-USAGE:
-   lotus config default [command options] [arguments...]
-
-OPTIONS:
-   --no-comment  don't comment default values (default: false)
-   --help, -h    show help (default: false)
-   
-```
-
-### lotus config updated
-```
-NAME:
-   lotus config updated - Print updated node config
-
-USAGE:
-   lotus config updated [command options] [arguments...]
-
-OPTIONS:
-   --no-comment  don't comment default values (default: false)
-   --help, -h    show help (default: false)
    
 ```
 
@@ -583,7 +535,7 @@ CATEGORY:
 
 OPTIONS:
    --verbose, -v  print verbose deal details (default: false)
-   --color        use color in display output (default: depends on output being a TTY)
+   --color        use color in display output (default: true)
    --show-failed  show failed/failing deals (default: true)
    --completed    show completed retrievals (default: false)
    --watch        watch deal updates in real-time, rather than a one time list (default: false)
@@ -657,7 +609,7 @@ CATEGORY:
 
 OPTIONS:
    --verbose, -v  print verbose deal details (default: false)
-   --color        use color in display output (default: depends on output being a TTY)
+   --color        use color in display output (default: true)
    --show-failed  show failed/failing deals (default: false)
    --watch        watch deal updates in real-time, rather than a one time list (default: false)
    --help, -h     show help (default: false)
@@ -795,7 +747,7 @@ CATEGORY:
 
 OPTIONS:
    --verbose, -v  print verbose transfer details (default: false)
-   --color        use color in display output (default: depends on output being a TTY)
+   --color        use color in display output (default: true)
    --completed    show completed data transfers (default: false)
    --watch        watch deal updates in real-time, rather than a one time list (default: false)
    --show-failed  show failed/cancelled transfers (default: false)
@@ -1721,7 +1673,7 @@ NAME:
    lotus state get-actor - Print actor information
 
 USAGE:
-   lotus state get-actor [command options] [actorAddress]
+   lotus state get-actor [command options] [actorrAddress]
 
 OPTIONS:
    --help, -h  show help (default: false)
@@ -2188,7 +2140,7 @@ USAGE:
    lotus chain export [command options] [outputPath]
 
 OPTIONS:
-   --tipset value             specify tipset to start the export from (default: "@head")
+   --tipset value             
    --recent-stateroots value  specify the number of recent state roots to include in the export (default: 0)
    --skip-old-msgs            (default: false)
    --help, -h                 show help (default: false)

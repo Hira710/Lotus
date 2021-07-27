@@ -41,7 +41,7 @@ func TestPaymentChannelsAPI(t *testing.T) {
 	ens := kit.NewEnsemble(t, kit.MockProofs()).
 		FullNode(&paymentCreator).
 		FullNode(&paymentReceiver).
-		Miner(&miner, &paymentCreator, kit.WithAllSubsystems()).
+		Miner(&miner, &paymentCreator).
 		Start().
 		InterconnectAll()
 	bms := ens.BeginMining(blockTime)

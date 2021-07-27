@@ -78,38 +78,27 @@ func ReaderParamEncoder(addr string) jsonrpc.Option {
 	})
 }
 
-// watchReadCloser watches the ReadCloser and closes the watch channel when
-// either: (1) the ReaderCloser fails on Read (including with a benign error
-// like EOF), or (2) when Close is called.
-//
-// Use it be notified of terminal states, in situations where a Read failure (or
-// EOF) is considered a terminal state too (besides Close).
-type watchReadCloser struct {
+type waitReadCloser struct {
 	io.ReadCloser
-	watch     chan struct{}
-	closeOnce sync.Once
+	wait chan struct{}
 }
 
-func (w *watchReadCloser) Read(p []byte) (int, error) {
+func (w *waitReadCloser) Read(p []byte) (int, error) {
 	n, err := w.ReadCloser.Read(p)
 	if err != nil {
-		w.closeOnce.Do(func() {
-			close(w.watch)
-		})
+		close(w.wait)
 	}
 	return n, err
 }
 
-func (w *watchReadCloser) Close() error {
-	w.closeOnce.Do(func() {
-		close(w.watch)
-	})
+func (w *waitReadCloser) Close() error {
+	close(w.wait)
 	return w.ReadCloser.Close()
 }
 
 func ReaderParamDecoder() (http.HandlerFunc, jsonrpc.ServerOption) {
 	var readersLk sync.Mutex
-	readers := map[uuid.UUID]chan *watchReadCloser{}
+	readers := map[uuid.UUID]chan *waitReadCloser{}
 
 	hnd := func(resp http.ResponseWriter, req *http.Request) {
 		strId := path.Base(req.URL.Path)
@@ -122,14 +111,14 @@ func ReaderParamDecoder() (http.HandlerFunc, jsonrpc.ServerOption) {
 		readersLk.Lock()
 		ch, found := readers[u]
 		if !found {
-			ch = make(chan *watchReadCloser)
+			ch = make(chan *waitReadCloser)
 			readers[u] = ch
 		}
 		readersLk.Unlock()
 
-		wr := &watchReadCloser{
+		wr := &waitReadCloser{
 			ReadCloser: req.Body,
-			watch:      make(chan struct{}),
+			wait:       make(chan struct{}),
 		}
 
 		tctx, cancel := context.WithTimeout(req.Context(), Timeout)
@@ -145,9 +134,7 @@ func ReaderParamDecoder() (http.HandlerFunc, jsonrpc.ServerOption) {
 		}
 
 		select {
-		case <-wr.watch:
-			// TODO should we check if we failed the Read, and if so
-			//  return an HTTP 500? i.e. turn watch into a chan error?
+		case <-wr.wait:
 		case <-req.Context().Done():
 			log.Errorf("context error in reader stream handler (2): %v", req.Context().Err())
 			resp.WriteHeader(500)
@@ -180,7 +167,7 @@ func ReaderParamDecoder() (http.HandlerFunc, jsonrpc.ServerOption) {
 		readersLk.Lock()
 		ch, found := readers[u]
 		if !found {
-			ch = make(chan *watchReadCloser)
+			ch = make(chan *waitReadCloser)
 			readers[u] = ch
 		}
 		readersLk.Unlock()

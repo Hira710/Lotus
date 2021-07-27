@@ -160,16 +160,8 @@ func (c *ClientNodeAdapter) ValidatePublishedDeal(ctx context.Context, deal stor
 		return 0, xerrors.Errorf("failed to resolve from msg ID addr: %w", err)
 	}
 
-	var pubOk bool
-	pubAddrs := append([]address.Address{mi.Worker, mi.Owner}, mi.ControlAddresses...)
-	for _, a := range pubAddrs {
-		if fromid == a {
-			pubOk = true
-			break
-		}
-	}
-	if !pubOk {
-		return 0, xerrors.Errorf("deal wasn't published by storage provider: from=%s, provider=%s,%+v", pubmsg.From, deal.Proposal.Provider, pubAddrs)
+	if fromid != mi.Worker {
+		return 0, xerrors.Errorf("deal wasn't published by storage provider: from=%s, provider=%s", pubmsg.From, deal.Proposal.Provider)
 	}
 
 	if pubmsg.To != miner2.StorageMarketActorAddr {

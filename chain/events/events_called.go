@@ -5,9 +5,6 @@ import (
 	"math"
 	"sync"
 
-	"github.com/filecoin-project/lotus/api"
-	lru "github.com/hashicorp/golang-lru"
-
 	"github.com/filecoin-project/lotus/chain/stmgr"
 
 	"github.com/filecoin-project/go-state-types/abi"
@@ -467,20 +464,14 @@ type messageEvents struct {
 
 	lk       sync.RWMutex
 	matchers map[triggerID]MsgMatchFunc
-
-	blockMsgLk    sync.Mutex
-	blockMsgCache *lru.ARCCache
 }
 
 func newMessageEvents(ctx context.Context, hcAPI headChangeAPI, cs EventAPI) messageEvents {
-	blsMsgCache, _ := lru.NewARC(500)
 	return messageEvents{
-		ctx:           ctx,
-		cs:            cs,
-		hcAPI:         hcAPI,
-		matchers:      make(map[triggerID]MsgMatchFunc),
-		blockMsgLk:    sync.Mutex{},
-		blockMsgCache: blsMsgCache,
+		ctx:      ctx,
+		cs:       cs,
+		hcAPI:    hcAPI,
+		matchers: make(map[triggerID]MsgMatchFunc),
 	}
 }
 
@@ -524,21 +515,14 @@ func (me *messageEvents) messagesForTs(ts *types.TipSet, consume func(*types.Mes
 	seen := map[cid.Cid]struct{}{}
 
 	for _, tsb := range ts.Blocks() {
-		me.blockMsgLk.Lock()
-		msgsI, ok := me.blockMsgCache.Get(tsb.Cid())
-		var err error
-		if !ok {
-			msgsI, err = me.cs.ChainGetBlockMessages(context.TODO(), tsb.Cid())
-			if err != nil {
-				log.Errorf("messagesForTs MessagesForBlock failed (ts.H=%d, Bcid:%s, B.Mcid:%s): %s", ts.Height(), tsb.Cid(), tsb.Messages, err)
-				// this is quite bad, but probably better than missing all the other updates
-				me.blockMsgLk.Unlock()
-				continue
-			}
-			me.blockMsgCache.Add(tsb.Cid(), msgsI)
+
+		msgs, err := me.cs.ChainGetBlockMessages(context.TODO(), tsb.Cid())
+		if err != nil {
+			log.Errorf("messagesForTs MessagesForBlock failed (ts.H=%d, Bcid:%s, B.Mcid:%s): %s", ts.Height(), tsb.Cid(), tsb.Messages, err)
+			// this is quite bad, but probably better than missing all the other updates
+			continue
 		}
-		me.blockMsgLk.Unlock()
-		msgs := msgsI.(*api.BlockMessages)
+
 		for _, m := range msgs.BlsMessages {
 			_, ok := seen[m.Cid()]
 			if ok {

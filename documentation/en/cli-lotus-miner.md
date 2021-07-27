@@ -7,13 +7,13 @@ USAGE:
    lotus-miner [global options] command [command options] [arguments...]
 
 VERSION:
-   1.11.1-dev
+   1.11.0
 
 COMMANDS:
    init     Initialize a lotus miner repo
    run      Start a lotus miner process
    stop     Stop a running lotus miner
-   config   Manage node config
+   config   Output default configuration
    backup   Create node metadata backup
    version  Print version
    help, h  Shows a list of commands or help for one command
@@ -41,8 +41,8 @@ COMMANDS:
 
 GLOBAL OPTIONS:
    --actor value, -a value                  specify other actor to check state for (read only)
-   --color                                  use color in display output (default: depends on output being a TTY)
-   --miner-repo value, --storagerepo value  Specify miner repo path. flag(storagerepo) and env(LOTUS_STORAGE_PATH) are DEPRECATION, will REMOVE SOON (default: "~/.lotusminer") [$LOTUS_MINER_PATH, $LOTUS_STORAGE_PATH]
+   --color                                  (default: false)
+   --miner-repo value, --storagerepo value  Specify miner repo path. flag(storagerepo) and env(LOTUS_STORAGE_PATH) are DEPRECATION, will REMOVE SOON (default: "/Users/jennijuju/.lotusminer") [$LOTUS_MINER_PATH, $LOTUS_STORAGE_PATH]
    --help, -h                               show help (default: false)
    --version, -v                            print the version (default: false)
 ```
@@ -57,7 +57,6 @@ USAGE:
 
 COMMANDS:
    restore  Initialize a lotus miner repo from a backup
-   service  Initialize a lotus miner sub-service
    help, h  Shows a list of commands or help for one command
 
 OPTIONS:
@@ -94,24 +93,6 @@ OPTIONS:
    
 ```
 
-### lotus-miner init service
-```
-NAME:
-   lotus-miner init service - Initialize a lotus miner sub-service
-
-USAGE:
-   lotus-miner init service [command options] [backupFile]
-
-OPTIONS:
-   --config value            config file (config.toml)
-   --nosync                  don't check full-node sync status (default: false)
-   --type value              type of service to be enabled
-   --api-sealer value        sealer API info (lotus-miner auth api-info --perm=admin)
-   --api-sector-index value  sector Index API info (lotus-miner auth api-info --perm=admin)
-   --help, -h                show help (default: false)
-   
-```
-
 ## lotus-miner run
 ```
 NAME:
@@ -145,47 +126,13 @@ OPTIONS:
 ## lotus-miner config
 ```
 NAME:
-   lotus-miner config - Manage node config
+   lotus-miner config - Output default configuration
 
 USAGE:
-   lotus-miner config command [command options] [arguments...]
-
-COMMANDS:
-   default  Print default node config
-   updated  Print updated node config
-   help, h  Shows a list of commands or help for one command
+   lotus-miner config [command options] [arguments...]
 
 OPTIONS:
-   --help, -h     show help (default: false)
-   --version, -v  print the version (default: false)
-   
-```
-
-### lotus-miner config default
-```
-NAME:
-   lotus-miner config default - Print default node config
-
-USAGE:
-   lotus-miner config default [command options] [arguments...]
-
-OPTIONS:
-   --no-comment  don't comment default values (default: false)
-   --help, -h    show help (default: false)
-   
-```
-
-### lotus-miner config updated
-```
-NAME:
-   lotus-miner config updated - Print updated node config
-
-USAGE:
-   lotus-miner config updated [command options] [arguments...]
-
-OPTIONS:
-   --no-comment  don't comment default values (default: false)
-   --help, -h    show help (default: false)
+   --help, -h  show help (default: false)
    
 ```
 
@@ -241,7 +188,6 @@ COMMANDS:
    control                Manage control addresses
    propose-change-worker  Propose a worker address change
    confirm-change-worker  Confirm a worker address change
-   compact-allocated      compact allocated sectors bitfield
    help, h                Shows a list of commands or help for one command
 
 OPTIONS:
@@ -349,7 +295,7 @@ USAGE:
 
 OPTIONS:
    --verbose   (default: false)
-   --color     use color in display output (default: depends on output being a TTY)
+   --color     (default: true)
    --help, -h  show help (default: false)
    
 ```
@@ -393,22 +339,6 @@ USAGE:
 OPTIONS:
    --really-do-it  Actually send transaction performing the action (default: false)
    --help, -h      show help (default: false)
-   
-```
-
-### lotus-miner actor compact-allocated
-```
-NAME:
-   lotus-miner actor compact-allocated - compact allocated sectors bitfield
-
-USAGE:
-   lotus-miner actor compact-allocated [command options] [arguments...]
-
-OPTIONS:
-   --mask-last-offset value  Mask sector IDs from 0 to 'higest_allocated - offset' (default: 0)
-   --mask-upto-n value       Mask sector IDs from 0 to 'n' (default: 0)
-   --really-do-it            Actually send transaction performing the action (default: false)
-   --help, -h                show help (default: false)
    
 ```
 
@@ -958,7 +888,7 @@ USAGE:
 
 OPTIONS:
    --verbose, -v  print verbose transfer details (default: false)
-   --color        use color in display output (default: depends on output being a TTY)
+   --color        use color in display output (default: true)
    --completed    show completed data transfers (default: false)
    --watch        watch deal updates in real-time, rather than a one time list (default: false)
    --show-failed  show failed/cancelled transfers (default: false)
@@ -1414,7 +1344,7 @@ USAGE:
 
 OPTIONS:
    --show-removed  show removed sectors (default: false)
-   --color, -c     use color in display output (default: depends on output being a TTY)
+   --color, -c     (default: true)
    --fast          don't show on-chain info for better performance (default: false)
    --events        display number of events the sector has received (default: false)
    --seal-time     display how long it took for the sector to be sealed (default: false)
@@ -1475,7 +1405,6 @@ OPTIONS:
    --new-expiration value     new expiration epoch (default: 0)
    --v1-sectors               renews all v1 sectors up to the maximum possible lifetime (default: false)
    --tolerance value          when extending v1 sectors, don't try to extend sectors by fewer than this number of epochs (default: 20160)
-   --expiration-ignore value  when extending v1 sectors, skip sectors whose current expiration is less than <ignore> epochs from now (default: 120)
    --expiration-cutoff value  when extending v1 sectors, skip sectors whose current expiration is more than <cutoff> epochs from now (infinity if unspecified) (default: 0)
                               
    --help, -h                 show help (default: false)
@@ -1810,7 +1739,7 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 OPTIONS:
-   --color        use color in display output (default: depends on output being a TTY)
+   --color        (default: false)
    --help, -h     show help (default: false)
    --version, -v  print the version (default: false)
    
@@ -1825,7 +1754,7 @@ USAGE:
    lotus-miner storage list sectors [command options] [arguments...]
 
 OPTIONS:
-   --color     use color in display output (default: depends on output being a TTY)
+   --color     (default: true)
    --help, -h  show help (default: false)
    
 ```
@@ -1887,7 +1816,7 @@ USAGE:
    lotus-miner sealing jobs [command options] [arguments...]
 
 OPTIONS:
-   --color          use color in display output (default: depends on output being a TTY)
+   --color          (default: false)
    --show-ret-done  show returned but not consumed calls (default: false)
    --help, -h       show help (default: false)
    
@@ -1902,7 +1831,7 @@ USAGE:
    lotus-miner sealing workers [command options] [arguments...]
 
 OPTIONS:
-   --color     use color in display output (default: depends on output being a TTY)
+   --color     (default: false)
    --help, -h  show help (default: false)
    
 ```

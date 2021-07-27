@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/filecoin-project/lotus/chain/actors/policy"
 	"github.com/filecoin-project/lotus/itests/kit"
 )
 
@@ -15,17 +14,11 @@ func TestDealsWithSealingAndRPC(t *testing.T) {
 
 	kit.QuietMiningLogs()
 
-	oldDelay := policy.GetPreCommitChallengeDelay()
-	policy.SetPreCommitChallengeDelay(5)
-	t.Cleanup(func() {
-		policy.SetPreCommitChallengeDelay(oldDelay)
-	})
-
 	var blockTime = 50 * time.Millisecond
 
-	client, miner, ens := kit.EnsembleMinimal(t, kit.ThroughRPC(), kit.WithAllSubsystems()) // no mock proofs.
+	client, miner, ens := kit.EnsembleMinimal(t, kit.ThroughRPC()) // no mock proofs.
 	ens.InterconnectAll().BeginMining(blockTime)
-	dh := kit.NewDealHarness(t, client, miner, miner)
+	dh := kit.NewDealHarness(t, client, miner)
 
 	t.Run("stdretrieval", func(t *testing.T) {
 		dh.RunConcurrentDeals(kit.RunConcurrentDealsOpts{N: 1})

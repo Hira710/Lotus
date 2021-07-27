@@ -30,8 +30,6 @@ import (
 type FullNodeStruct struct {
 	CommonStruct
 
-	NetStruct
-
 	Internal struct {
 		BeaconGetEntry func(p0 context.Context, p1 abi.ChainEpoch) (*types.BeaconEntry, error) `perm:"read"`
 
@@ -46,8 +44,6 @@ type FullNodeStruct struct {
 		ChainGetGenesis func(p0 context.Context) (*types.TipSet, error) `perm:"read"`
 
 		ChainGetMessage func(p0 context.Context, p1 cid.Cid) (*types.Message, error) `perm:"read"`
-
-		ChainGetMessagesInTipset func(p0 context.Context, p1 types.TipSetKey) ([]api.Message, error) `perm:"read"`
 
 		ChainGetNode func(p0 context.Context, p1 string) (*api.IpldObject, error) `perm:"read"`
 
@@ -391,8 +387,6 @@ type FullNodeStruct struct {
 
 type FullNodeStub struct {
 	CommonStub
-
-	NetStub
 }
 
 type GatewayStruct struct {
@@ -518,14 +512,6 @@ func (s *FullNodeStruct) ChainGetMessage(p0 context.Context, p1 cid.Cid) (*types
 
 func (s *FullNodeStub) ChainGetMessage(p0 context.Context, p1 cid.Cid) (*types.Message, error) {
 	return nil, xerrors.New("method not supported")
-}
-
-func (s *FullNodeStruct) ChainGetMessagesInTipset(p0 context.Context, p1 types.TipSetKey) ([]api.Message, error) {
-	return s.Internal.ChainGetMessagesInTipset(p0, p1)
-}
-
-func (s *FullNodeStub) ChainGetMessagesInTipset(p0 context.Context, p1 types.TipSetKey) ([]api.Message, error) {
-	return *new([]api.Message), xerrors.New("method not supported")
 }
 
 func (s *FullNodeStruct) ChainGetNode(p0 context.Context, p1 string) (*api.IpldObject, error) {

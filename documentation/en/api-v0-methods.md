@@ -17,7 +17,6 @@
   * [ChainGetBlockMessages](#ChainGetBlockMessages)
   * [ChainGetGenesis](#ChainGetGenesis)
   * [ChainGetMessage](#ChainGetMessage)
-  * [ChainGetMessagesInTipset](#ChainGetMessagesInTipset)
   * [ChainGetNode](#ChainGetNode)
   * [ChainGetParentMessages](#ChainGetParentMessages)
   * [ChainGetParentReceipts](#ChainGetParentReceipts)
@@ -280,7 +279,7 @@ Response:
 ```json
 {
   "Version": "string value",
-  "APIVersion": 131329,
+  "APIVersion": 131328,
   "BlockDelay": 42
 }
 ```
@@ -533,28 +532,6 @@ Response:
   }
 }
 ```
-
-### ChainGetMessagesInTipset
-ChainGetMessagesInTipset returns message stores in current tipset
-
-
-Perms: read
-
-Inputs:
-```json
-[
-  [
-    {
-      "/": "bafy2bzacea3wsdh6y3a36tb3skempjoxqpuyompjbmfeyf34fi3uy6uue42v4"
-    },
-    {
-      "/": "bafy2bzacebp3shtrn43k7g3unredz7fxn4gj533d3o43tqn2p2ipxxhrvchve"
-    }
-  ]
-]
-```
-
-Response: `null`
 
 ### ChainGetNode
 
@@ -4634,7 +4611,7 @@ Inputs:
 ]
 ```
 
-Response: `1300`
+Response: `13`
 
 ### StateReadState
 StateReadState returns the indicated actor's state.

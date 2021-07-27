@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/filecoin-project/go-state-types/network"
-	api "github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/build"
 
 	"github.com/ipfs/go-cid"
@@ -59,9 +58,9 @@ func TestBasicPolicyMostConstrictiveSchedule(t *testing.T) {
 				Size:     abi.PaddedPieceSize(1024),
 				PieceCID: fakePieceCid(t),
 			},
-			DealInfo: &api.PieceDealInfo{
+			DealInfo: &sealing.DealInfo{
 				DealID: abi.DealID(42),
-				DealSchedule: api.DealSchedule{
+				DealSchedule: sealing.DealSchedule{
 					StartEpoch: abi.ChainEpoch(70),
 					EndEpoch:   abi.ChainEpoch(75),
 				},
@@ -72,9 +71,9 @@ func TestBasicPolicyMostConstrictiveSchedule(t *testing.T) {
 				Size:     abi.PaddedPieceSize(1024),
 				PieceCID: fakePieceCid(t),
 			},
-			DealInfo: &api.PieceDealInfo{
+			DealInfo: &sealing.DealInfo{
 				DealID: abi.DealID(43),
-				DealSchedule: api.DealSchedule{
+				DealSchedule: sealing.DealSchedule{
 					StartEpoch: abi.ChainEpoch(80),
 					EndEpoch:   abi.ChainEpoch(100),
 				},
@@ -99,9 +98,9 @@ func TestBasicPolicyIgnoresExistingScheduleIfExpired(t *testing.T) {
 				Size:     abi.PaddedPieceSize(1024),
 				PieceCID: fakePieceCid(t),
 			},
-			DealInfo: &api.PieceDealInfo{
+			DealInfo: &sealing.DealInfo{
 				DealID: abi.DealID(44),
-				DealSchedule: api.DealSchedule{
+				DealSchedule: sealing.DealSchedule{
 					StartEpoch: abi.ChainEpoch(1),
 					EndEpoch:   abi.ChainEpoch(10),
 				},
@@ -126,9 +125,9 @@ func TestMissingDealIsIgnored(t *testing.T) {
 				Size:     abi.PaddedPieceSize(1024),
 				PieceCID: fakePieceCid(t),
 			},
-			DealInfo: &api.PieceDealInfo{
+			DealInfo: &sealing.DealInfo{
 				DealID: abi.DealID(44),
-				DealSchedule: api.DealSchedule{
+				DealSchedule: sealing.DealSchedule{
 					StartEpoch: abi.ChainEpoch(1),
 					EndEpoch:   abi.ChainEpoch(10),
 				},

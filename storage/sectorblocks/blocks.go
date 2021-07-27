@@ -16,10 +16,11 @@ import (
 
 	cborutil "github.com/filecoin-project/go-cbor-util"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/specs-storage/storage"
+	sealing "github.com/filecoin-project/lotus/extern/storage-sealing"
 
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
+	"github.com/filecoin-project/lotus/storage"
 )
 
 type SealSerialization uint8
@@ -47,22 +48,17 @@ func DsKeyToDealID(key datastore.Key) (uint64, error) {
 	return dealID, nil
 }
 
-type SectorBuilder interface {
-	SectorAddPieceToAny(ctx context.Context, size abi.UnpaddedPieceSize, r storage.Data, d api.PieceDealInfo) (api.SectorOffset, error)
-	SectorsStatus(ctx context.Context, sid abi.SectorNumber, showOnChainInfo bool) (api.SectorInfo, error)
-}
-
 type SectorBlocks struct {
-	SectorBuilder
+	*storage.Miner
 
 	keys  datastore.Batching
 	keyLk sync.Mutex
 }
 
-func NewSectorBlocks(sb SectorBuilder, ds dtypes.MetadataDS) *SectorBlocks {
+func NewSectorBlocks(miner *storage.Miner, ds dtypes.MetadataDS) *SectorBlocks {
 	sbc := &SectorBlocks{
-		SectorBuilder: sb,
-		keys:          namespace.Wrap(ds, dsPrefix),
+		Miner: miner,
+		keys:  namespace.Wrap(ds, dsPrefix),
 	}
 
 	return sbc
@@ -100,19 +96,19 @@ func (st *SectorBlocks) writeRef(dealID abi.DealID, sectorID abi.SectorNumber, o
 	return st.keys.Put(DealIDToDsKey(dealID), newRef) // TODO: batch somehow
 }
 
-func (st *SectorBlocks) AddPiece(ctx context.Context, size abi.UnpaddedPieceSize, r io.Reader, d api.PieceDealInfo) (abi.SectorNumber, abi.PaddedPieceSize, error) {
-	so, err := st.SectorBuilder.SectorAddPieceToAny(ctx, size, r, d)
+func (st *SectorBlocks) AddPiece(ctx context.Context, size abi.UnpaddedPieceSize, r io.Reader, d sealing.DealInfo) (abi.SectorNumber, abi.PaddedPieceSize, error) {
+	sn, offset, err := st.Miner.AddPieceToAnySector(ctx, size, r, d)
 	if err != nil {
 		return 0, 0, err
 	}
 
 	// TODO: DealID has very low finality here
-	err = st.writeRef(d.DealID, so.Sector, so.Offset, size)
+	err = st.writeRef(d.DealID, sn, offset, size)
 	if err != nil {
 		return 0, 0, xerrors.Errorf("writeRef: %w", err)
 	}
 
-	return so.Sector, so.Offset, nil
+	return sn, offset, nil
 }
 
 func (st *SectorBlocks) List() (map[uint64][]api.SealedRef, error) {

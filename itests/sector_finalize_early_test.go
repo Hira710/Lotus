@@ -35,7 +35,7 @@ func TestDealsWithFinalizeEarly(t *testing.T) {
 			}, nil
 		})))) // no mock proofs.
 	ens.InterconnectAll().BeginMining(blockTime)
-	dh := kit.NewDealHarness(t, client, miner, miner)
+	dh := kit.NewDealHarness(t, client, miner)
 
 	ctx := context.Background()
 

@@ -446,9 +446,6 @@ var StateExecTraceCmd = &cli.Command{
 		if err != nil {
 			return err
 		}
-		if lookup == nil {
-			return fmt.Errorf("failed to find message: %s", mcid)
-		}
 
 		ts, err := capi.ChainGetTipSet(ctx, lookup.TipSet)
 		if err != nil {
@@ -698,7 +695,7 @@ var StateListActorsCmd = &cli.Command{
 var StateGetActorCmd = &cli.Command{
 	Name:      "get-actor",
 	Usage:     "Print actor information",
-	ArgsUsage: "[actorAddress]",
+	ArgsUsage: "[actorrAddress]",
 	Action: func(cctx *cli.Context) error {
 		api, closer, err := GetFullNodeAPI(cctx)
 		if err != nil {
@@ -1492,10 +1489,6 @@ var StateSearchMsgCmd = &cli.Command{
 		mw, err := api.StateSearchMsg(ctx, msg)
 		if err != nil {
 			return err
-		}
-
-		if mw == nil {
-			return fmt.Errorf("failed to find message: %s", msg)
 		}
 
 		m, err := api.ChainGetMessage(ctx, msg)

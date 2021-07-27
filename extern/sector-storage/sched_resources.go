@@ -3,6 +3,7 @@ package sectorstorage
 import (
 	"sync"
 
+	sealtasks "github.com/filecoin-project/lotus/extern/sector-storage/sealtasks"
 	"github.com/filecoin-project/lotus/extern/sector-storage/storiface"
 )
 
@@ -26,19 +27,45 @@ func (a *activeResources) withResources(id WorkerID, wr storiface.WorkerInfo, r 
 	return err
 }
 
+// Modified by long 20210318
 func (a *activeResources) add(wr storiface.WorkerResources, r Resources) {
 	if r.CanGPU {
+		a.gpuUsedNum++
 		a.gpuUsed = true
 	}
+
+	switch r.taskType {
+	case sealtasks.TTAddPiece:
+		a.apParallelNum++
+	case sealtasks.TTPreCommit1:
+		a.p1ParallelNum++
+	case sealtasks.TTPreCommit2:
+		a.p2ParallelNum++
+	}
+
 	a.cpuUse += r.Threads(wr.CPUs)
 	a.memUsedMin += r.MinMemory
 	a.memUsedMax += r.MaxMemory
 }
 
+// Modified by long 20210318
 func (a *activeResources) free(wr storiface.WorkerResources, r Resources) {
 	if r.CanGPU {
-		a.gpuUsed = false
+		a.gpuUsedNum--
+		if a.gpuUsedNum == 0 {
+			a.gpuUsed = false
+		}
 	}
+
+	switch r.taskType {
+	case sealtasks.TTAddPiece:
+		a.apParallelNum--
+	case sealtasks.TTPreCommit1:
+		a.p1ParallelNum--
+	case sealtasks.TTPreCommit2:
+		a.p2ParallelNum--
+	}
+
 	a.cpuUse -= r.Threads(wr.CPUs)
 	a.memUsedMin -= r.MinMemory
 	a.memUsedMax -= r.MaxMemory
@@ -72,12 +99,30 @@ func (a *activeResources) canHandleRequest(needRes Resources, wid WorkerID, call
 		return false
 	}
 
-	if len(res.GPUs) > 0 && needRes.CanGPU {
-		if a.gpuUsed {
-			log.Debugf("sched: not scheduling on worker %s for %s; GPU in use", wid, caller)
+	// Deleted by long 20210510
+	// if len(res.GPUs) > 0 && needRes.CanGPU { // Meanless
+	// 	if a.gpuUsed {
+	// 		log.Debugf("sched[C2]: not scheduling on worker %s for %s; GPU in use", wid, caller)
+	// 		return false
+	// 	}
+	// }
+
+	// Added by long 20210405 -------------------------------------------------
+	switch needRes.taskType {
+	// case sealtasks.TTAddPiece:
+	// 	if a.p1ParallelNum >= LO_P1_PARALLEL_NUM {
+	// 		// When the worker was filled by P1, there is no need to get AP.
+	// 		log.Debugf("sched[AP]: not scheduling on worker %s for %s; P1ParallelNum get max", wid, caller)
+	// 		return false
+	// 	}
+
+	case sealtasks.TTPreCommit1:
+		if a.p1ParallelNum >= LO_P1_PARALLEL_NUM {
+			log.Debugf("sched[P1]: not scheduling on worker %s for %s; P1ParallelNum get max", wid, caller)
 			return false
 		}
 	}
+	// ------------------------------------------------------------------------
 
 	return true
 }

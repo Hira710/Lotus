@@ -32,7 +32,6 @@ const UpgradeTapeHeight = 60
 
 const UpgradeKumquatHeight = 90
 
-const UpgradePricelistOopsHeight = 99
 const UpgradeCalicoHeight = 100
 const UpgradePersianHeight = UpgradeCalicoHeight + (builtin2.EpochsInHour * 1)
 
@@ -43,7 +42,7 @@ const UpgradeOrangeHeight = 300
 const UpgradeTrustHeight = 600
 const UpgradeNorwegianHeight = 201000
 const UpgradeTurboHeight = 203000
-const UpgradeHyperdriveHeight = 379178
+const UpgradeHyperdriveHeight = 999999999
 
 func init() {
 	// Minimum block production power is set to 4 TiB

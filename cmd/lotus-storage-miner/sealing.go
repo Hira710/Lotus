@@ -36,16 +36,10 @@ var sealingWorkersCmd = &cli.Command{
 	Name:  "workers",
 	Usage: "list workers",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{
-			Name:        "color",
-			Usage:       "use color in display output",
-			DefaultText: "depends on output being a TTY",
-		},
+		&cli.BoolFlag{Name: "color"},
 	},
 	Action: func(cctx *cli.Context) error {
-		if cctx.IsSet("color") {
-			color.NoColor = !cctx.Bool("color")
-		}
+		color.NoColor = !cctx.Bool("color")
 
 		nodeApi, closer, err := lcli.GetStorageMinerAPI(cctx)
 		if err != nil {
@@ -90,9 +84,16 @@ var sealingWorkersCmd = &cli.Command{
 			fmt.Printf("Worker %s, host %s%s\n", stat.id, color.MagentaString(stat.Info.Hostname), disabled)
 
 			var barCols = uint64(64)
+
+			// Added by long 20210318 -------------------------------------------------
+			pc1Bars := int(stat.P1ParallelNum * barCols / stat.P1ParallelMax)
+			pc1Bar := strings.Repeat("|", pc1Bars) + strings.Repeat(" ", int(barCols)-pc1Bars)
+			fmt.Printf("\tPC1:  [%s] %d/%d task(s)\n",
+				color.GreenString(pc1Bar), stat.P1ParallelNum, stat.P1ParallelMax)
+			// ------------------------------------------------------------------------
+
 			cpuBars := int(stat.CpuUse * barCols / stat.Info.Resources.CPUs)
 			cpuBar := strings.Repeat("|", cpuBars) + strings.Repeat(" ", int(barCols)-cpuBars)
-
 			fmt.Printf("\tCPU:  [%s] %d/%d core(s) in use\n",
 				color.GreenString(cpuBar), stat.CpuUse, stat.Info.Resources.CPUs)
 
@@ -133,20 +134,14 @@ var sealingJobsCmd = &cli.Command{
 	Name:  "jobs",
 	Usage: "list running jobs",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{
-			Name:        "color",
-			Usage:       "use color in display output",
-			DefaultText: "depends on output being a TTY",
-		},
+		&cli.BoolFlag{Name: "color"},
 		&cli.BoolFlag{
 			Name:  "show-ret-done",
 			Usage: "show returned but not consumed calls",
 		},
 	},
 	Action: func(cctx *cli.Context) error {
-		if cctx.IsSet("color") {
-			color.NoColor = !cctx.Bool("color")
-		}
+		color.NoColor = !cctx.Bool("color")
 
 		nodeApi, closer, err := lcli.GetStorageMinerAPI(cctx)
 		if err != nil {

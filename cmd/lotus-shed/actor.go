@@ -265,15 +265,12 @@ var actorControlList = &cli.Command{
 			Name: "verbose",
 		},
 		&cli.BoolFlag{
-			Name:        "color",
-			Usage:       "use color in display output",
-			DefaultText: "depends on output being a TTY",
+			Name:  "color",
+			Value: true,
 		},
 	},
 	Action: func(cctx *cli.Context) error {
-		if cctx.IsSet("color") {
-			color.NoColor = !cctx.Bool("color")
-		}
+		color.NoColor = !cctx.Bool("color")
 
 		var maddr address.Address
 		if act := cctx.String("actor"); act != "" {

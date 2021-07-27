@@ -120,11 +120,10 @@ func PrepareBootstrapper(t *TestEnvironment) (*Bootstrapper, error) {
 	bootstrapperIP := t.NetClient.MustGetDataNetworkIP().String()
 
 	n := &LotusNode{}
-	r := repo.NewMemory(nil)
 	stop, err := node.New(context.Background(),
 		node.FullAPI(&n.FullApi),
-		node.Base(),
-		node.Repo(r),
+		node.Online(),
+		node.Repo(repo.NewMemory(nil)),
 		node.Override(new(modules.Genesis), modtest.MakeGenesisMem(&genesisBuffer, genesisTemplate)),
 		withApiEndpoint(fmt.Sprintf("/ip4/0.0.0.0/tcp/%s", t.PortNumber("node_rpc", "0"))),
 		withListenAddress(bootstrapperIP),

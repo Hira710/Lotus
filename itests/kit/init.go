@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/lotus/build"
 	"github.com/filecoin-project/lotus/chain/actors/policy"
 	logging "github.com/ipfs/go-log/v2"
@@ -13,8 +12,6 @@ import (
 
 func init() {
 	_ = logging.SetLogLevel("*", "INFO")
-
-	policy.SetProviderCollateralSupplyTarget(big.Zero(), big.NewInt(1))
 
 	policy.SetConsensusMinerMinPower(abi.NewStoragePower(2048))
 	policy.SetSupportedProofTypes(abi.RegisteredSealProof_StackedDrg2KiBV1)

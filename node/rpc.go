@@ -23,7 +23,6 @@ import (
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/api/v0api"
 	"github.com/filecoin-project/lotus/api/v1api"
-	"github.com/filecoin-project/lotus/lib/rpcenc"
 	"github.com/filecoin-project/lotus/metrics"
 	"github.com/filecoin-project/lotus/node/impl"
 )
@@ -118,20 +117,18 @@ func MinerHandler(a api.StorageMiner, permissioned bool) (http.Handler, error) {
 		mapi = api.PermissionedStorMinerAPI(mapi)
 	}
 
-	readerHandler, readerServerOpt := rpcenc.ReaderParamDecoder()
-	rpcServer := jsonrpc.NewServer(readerServerOpt)
+	rpcServer := jsonrpc.NewServer()
 	rpcServer.Register("Filecoin", mapi)
 
 	m.Handle("/rpc/v0", rpcServer)
-	m.Handle("/rpc/streams/v0/push/{uuid}", readerHandler)
-	m.PathPrefix("/remote").HandlerFunc(a.(*impl.StorageMinerAPI).ServeRemote(permissioned))
+	m.PathPrefix("/remote").HandlerFunc(a.(*impl.StorageMinerAPI).ServeRemote)
 
 	// debugging
 	m.Handle("/debug/metrics", metrics.Exporter())
 	m.PathPrefix("/").Handler(http.DefaultServeMux) // pprof
 
 	if !permissioned {
-		return m, nil
+		return rpcServer, nil
 	}
 
 	ah := &auth.Handler{

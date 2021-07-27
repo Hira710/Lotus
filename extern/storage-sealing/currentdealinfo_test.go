@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var errNotFound = errors.New("could not find")
+var errNotFound = errors.New("Could not find")
 
 func TestGetCurrentDealInfo(t *testing.T) {
 	ctx := context.Background()
@@ -179,12 +179,6 @@ func TestGetCurrentDealInfo(t *testing.T) {
 			targetProposal:   &proposal,
 			expectedDealID:   zeroDealID,
 			expectedError:    xerrors.Errorf("looking for publish deal message %s: search msg failed: something went wrong", dummyCid),
-		},
-		"search message not found": {
-			publishCid:     dummyCid,
-			targetProposal: &proposal,
-			expectedDealID: zeroDealID,
-			expectedError:  xerrors.Errorf("looking for publish deal message %s: not found", dummyCid),
 		},
 		"return code not ok": {
 			publishCid: dummyCid,
