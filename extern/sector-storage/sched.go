@@ -28,7 +28,6 @@ var (
 	SchedWindows = 2
 )
 
-// Added by long 20210406
 // 记录 AP 分配记录，KEY 为 sector，value 为 hostname
 var taskAssignRecord = map[uint64]string{}
 
@@ -123,12 +122,12 @@ type activeResources struct {
 
 	cond *sync.Cond
 
-	// Added by long 20210404 -----------------------------
+	// -----------------------------
 	gpuUsedNum    uint64
 	apParallelNum uint64
 	p1ParallelNum uint64
 	p2ParallelNum uint64
-	// ----------------------------------------------------
+	// -----------------------------
 }
 
 type workerRequest struct {
@@ -446,7 +445,7 @@ func (sh *scheduler) trySched() {
 				rpcCtx, cancel := context.WithTimeout(task.ctx, SelectorTimeout)
 				defer cancel()
 
-				// Added by long 20210406
+				// AP排序
 				if task.taskType == sealtasks.TTAddPiece {
 					return wi.active.p1ParallelNum < wj.active.p1ParallelNum
 				}
@@ -464,7 +463,7 @@ func (sh *scheduler) trySched() {
 
 	log.Debugf("SCHED windows: %+v", windows)
 	log.Debugf("SCHED Acceptable win: %+v", acceptableWindows)
-	log.Debugf("LONGMEN SCHED: task assign record: %v", taskAssignRecord)
+	log.Debugf("SCHED: task assign record: %v", taskAssignRecord)
 
 	// Step 2
 	scheduled := 0
@@ -481,14 +480,14 @@ func (sh *scheduler) trySched() {
 
 			log.Debugf("SCHED try assign sqi:%d sector %d to window %d", sqi, task.sector.ID.Number, wnd)
 
-			// Added by long 20210406
+			// P1或者P2分配给同一worker
 			isLocal := true
 			if task.taskType == sealtasks.TTPreCommit1 || task.taskType == sealtasks.TTPreCommit2 {
 				if record, ok := taskAssignRecord[uint64(task.sector.ID.Number)]; ok {
 					isLocal = record == sh.workers[wid].info.Hostname
 				}
 			}
-			log.Debugf("LONGMEN SCHED: %d %v try to assigned to %v, isLocal: %v", task.sector.ID.Number, task.taskType, sh.workers[wid].info.Hostname, isLocal)
+			log.Debugf("SCHED: %d %v try to assigned to %v, isLocal: %v", task.sector.ID.Number, task.taskType, sh.workers[wid].info.Hostname, isLocal)
 
 			// TODO: allow bigger windows
 			if !isLocal || !windows[wnd].allocated.canHandleRequest(needRes, wid, "schedAssign", info) {
@@ -505,7 +504,7 @@ func (sh *scheduler) trySched() {
 
 			selectedWindow = wnd
 
-			// Added by long 20210406
+			// 记录AP分配状况
 			if task.taskType == sealtasks.TTAddPiece {
 				taskAssignRecord[uint64(task.sector.ID.Number)] = sh.workers[wid].info.Hostname
 			}

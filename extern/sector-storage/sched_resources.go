@@ -27,7 +27,7 @@ func (a *activeResources) withResources(id WorkerID, wr storiface.WorkerInfo, r 
 	return err
 }
 
-// Modified by long 20210318
+// ------------
 func (a *activeResources) add(wr storiface.WorkerResources, r Resources) {
 	if r.CanGPU {
 		a.gpuUsedNum++
@@ -48,7 +48,7 @@ func (a *activeResources) add(wr storiface.WorkerResources, r Resources) {
 	a.memUsedMax += r.MaxMemory
 }
 
-// Modified by long 20210318
+// --------------
 func (a *activeResources) free(wr storiface.WorkerResources, r Resources) {
 	if r.CanGPU {
 		a.gpuUsedNum--
@@ -99,7 +99,7 @@ func (a *activeResources) canHandleRequest(needRes Resources, wid WorkerID, call
 		return false
 	}
 
-	// Deleted by long 20210510
+	// ------------------------------------------------------------------------
 	// if len(res.GPUs) > 0 && needRes.CanGPU { // Meanless
 	// 	if a.gpuUsed {
 	// 		log.Debugf("sched[C2]: not scheduling on worker %s for %s; GPU in use", wid, caller)
@@ -107,7 +107,7 @@ func (a *activeResources) canHandleRequest(needRes Resources, wid WorkerID, call
 	// 	}
 	// }
 
-	// Added by long 20210405 -------------------------------------------------
+	
 	switch needRes.taskType {
 	// case sealtasks.TTAddPiece:
 	// 	if a.p1ParallelNum >= LO_P1_PARALLEL_NUM {
@@ -116,11 +116,11 @@ func (a *activeResources) canHandleRequest(needRes Resources, wid WorkerID, call
 	// 		return false
 	// 	}
 
-	case sealtasks.TTPreCommit1:
-		if a.p1ParallelNum >= LO_P1_PARALLEL_NUM {
-			log.Debugf("sched[P1]: not scheduling on worker %s for %s; P1ParallelNum get max", wid, caller)
-			return false
-		}
+		case sealtasks.TTPreCommit1:
+			if a.p1ParallelNum >= LO_P1_PARALLEL_NUM {
+				log.Debugf("sched[P1]: not scheduling on worker %s for %s; P1ParallelNum get max", wid, caller)
+				return false
+			}
 	}
 	// ------------------------------------------------------------------------
 
