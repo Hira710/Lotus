@@ -109,6 +109,7 @@ func (a *activeResources) canHandleRequest(needRes Resources, wid WorkerID, call
 
 	
 	switch needRes.taskType {
+		//AP多线程，不需要判断
 	// case sealtasks.TTAddPiece:
 	// 	if a.p1ParallelNum >= LO_P1_PARALLEL_NUM {
 	// 		// When the worker was filled by P1, there is no need to get AP.

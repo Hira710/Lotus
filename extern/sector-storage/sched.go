@@ -504,7 +504,7 @@ func (sh *scheduler) trySched() {
 
 			selectedWindow = wnd
 
-			// 记录AP分配状况
+			// 记录AP分配状况（TODO）
 			if task.taskType == sealtasks.TTAddPiece {
 				taskAssignRecord[uint64(task.sector.ID.Number)] = sh.workers[wid].info.Hostname
 			}

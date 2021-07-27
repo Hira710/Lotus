@@ -24,8 +24,8 @@ func (m *Manager) WorkerStats() map[uuid.UUID]storiface.WorkerStats {
 			GpuUsed:    handle.active.gpuUsed,
 			CpuUse:     3， //handle.active.cpuUse,
 
-			P1ParallelNum: handle.active.p1ParallelNum, // Add
-			P1ParallelMax: LO_P1_PARALLEL_NUM,          // Add
+			P1ParallelNum: handle.active.p1ParallelNum, // P1当前数量
+			P1ParallelMax: LO_P1_PARALLEL_NUM,          // P1最大数量
 		}
 	}
 
