@@ -16,7 +16,7 @@ func (m *Manager) WorkerStats() map[uuid.UUID]storiface.WorkerStats {
 	out := map[uuid.UUID]storiface.WorkerStats{}
 
 	for id, handle := range m.sched.workers {
-		var cpuCount int = handle.active.cpuUse + handle.active.p1ParallelNum * 4
+		var cpuCount uint64 = handle.active.cpuUse + handle.active.p1ParallelNum * 4
 		if ( cpuCount > runtime.NumCPU() ) {
 			cpuCount = runtime.NumCPU()
 		}
