@@ -447,7 +447,8 @@ func (sh *scheduler) trySched() {
 
 				// AP排序
 				if task.taskType == sealtasks.TTAddPiece {
-					return wi.active.p1ParallelNum < wj.active.p1ParallelNum
+					//根据AP+P1数量分配
+					return (wi.active.p1ParallelNum + wi.active.apParallelNum) < (wj.active.p1ParallelNum + wi.active.apParallelNum)
 				}
 
 				r, err := task.sel.Cmp(rpcCtx, task.taskType, wi, wj)

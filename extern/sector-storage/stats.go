@@ -2,6 +2,7 @@ package sectorstorage
 
 import (
 	"time"
+	"runtime"
 
 	"github.com/google/uuid"
 
@@ -15,6 +16,10 @@ func (m *Manager) WorkerStats() map[uuid.UUID]storiface.WorkerStats {
 	out := map[uuid.UUID]storiface.WorkerStats{}
 
 	for id, handle := range m.sched.workers {
+		var cpuCount int = handle.active.cpuUse + handle.active.p1ParallelNum * 4
+		if ( cpuCount > runtime.NumCPU() ) {
+			cpuCount = runtime.NumCPU()
+		}
 		out[uuid.UUID(id)] = storiface.WorkerStats{
 			Info:    handle.info,
 			Enabled: handle.enabled,
@@ -22,7 +27,7 @@ func (m *Manager) WorkerStats() map[uuid.UUID]storiface.WorkerStats {
 			MemUsedMin: handle.active.memUsedMin,
 			MemUsedMax: handle.active.memUsedMax,
 			GpuUsed:    handle.active.gpuUsed,
-			CpuUse:     3, //handle.active.cpuUse,
+			CpuUse:     ,
 
 			P1ParallelNum: handle.active.p1ParallelNum, // P1当前数量
 			P1ParallelMax: LO_P1_PARALLEL_NUM,          // P1最大数量
