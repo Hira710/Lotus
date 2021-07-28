@@ -28,7 +28,7 @@ var (
 	SchedWindows = 2
 )
 
-// 记录 AP 分配记录，KEY 为 sector，value 为 hostname
+// Record AP history，KEY : sector，value : hostname
 var taskAssignRecord = map[uint64]string{}
 
 func getPriority(ctx context.Context) int {
@@ -445,11 +445,14 @@ func (sh *scheduler) trySched() {
 				rpcCtx, cancel := context.WithTimeout(task.ctx, SelectorTimeout)
 				defer cancel()
 
-				// AP排序
+				// Sort AP
 				if task.taskType == sealtasks.TTAddPiece {
-					//根据AP+P1数量分配
+					//Order by AP+P1
 					return (wi.active.p1ParallelNum + wi.active.apParallelNum) < (wj.active.p1ParallelNum + wi.active.apParallelNum)
 				}
+
+				// Sort C2
+				
 
 				r, err := task.sel.Cmp(rpcCtx, task.taskType, wi, wj)
 				if err != nil {
@@ -481,7 +484,8 @@ func (sh *scheduler) trySched() {
 
 			log.Debugf("SCHED try assign sqi:%d sector %d to window %d", sqi, task.sector.ID.Number, wnd)
 
-			// P1或者P2分配给同一worker
+			// AP/P1/P2 to the same worker
+			// C2 : TTCommit2
 			isLocal := true
 			if task.taskType == sealtasks.TTPreCommit1 || task.taskType == sealtasks.TTPreCommit2 {
 				if record, ok := taskAssignRecord[uint64(task.sector.ID.Number)]; ok {
@@ -505,7 +509,7 @@ func (sh *scheduler) trySched() {
 
 			selectedWindow = wnd
 
-			// 记录AP分配状况（TODO）
+			// Record AP history（TODO）
 			if task.taskType == sealtasks.TTAddPiece {
 				taskAssignRecord[uint64(task.sector.ID.Number)] = sh.workers[wid].info.Hostname
 			}

@@ -85,7 +85,7 @@ var sealingWorkersCmd = &cli.Command{
 
 			var barCols = uint64(64)
 
-			// Added by long 20210318 -------------------------------------------------
+			// 显示PC1任务数 -------------------------------------------------
 			pc1Bars := int(stat.P1ParallelNum * barCols / stat.P1ParallelMax)
 			pc1Bar := strings.Repeat("|", pc1Bars) + strings.Repeat(" ", int(barCols)-pc1Bars)
 			fmt.Printf("\tPC1:  [%s] %d/%d task(s)\n",
