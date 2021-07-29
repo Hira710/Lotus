@@ -391,18 +391,21 @@ func (sh *scheduler) trySched() {
 			task.indexHeap = sqi
 			for wnd, windowRequest := range sh.openWindows {
 				worker, ok := sh.workers[windowRequest.worker]
+				//worker is lost
 				if !ok {
 					log.Errorf("worker referenced by windowRequest not found (worker: %s)", windowRequest.worker)
 					// TODO: How to move forward here?
 					continue
 				}
 
+				//worker be disabled
 				if !worker.enabled {
 					log.Debugw("skipping disabled worker", "worker", windowRequest.worker)
 					continue
 				}
 
 				// TODO: allow bigger windows
+				// this worker can accepte the sched
 				if !windows[wnd].allocated.canHandleRequest(needRes, windowRequest.worker, "schedAcceptable", worker.info) {
 					continue
 				}
@@ -417,6 +420,14 @@ func (sh *scheduler) trySched() {
 
 				if !ok {
 					continue
+				}
+
+				//
+				if task.taskType == sealtasks.TTAddPiece {
+					if worker.active.apParallelNum > 1 {
+						log.Debugw("skipping AP worker", "worker", windowRequest.worker)
+						continue
+					}
 				}
 
 				acceptableWindows[sqi] = append(acceptableWindows[sqi], wnd)
@@ -451,8 +462,8 @@ func (sh *scheduler) trySched() {
 					return (wi.active.p1ParallelNum + wi.active.apParallelNum) < (wj.active.p1ParallelNum + wi.active.apParallelNum)
 				}
 
-				// Sort C2
-				
+				// TODO:Sort C2
+				// ...
 
 				r, err := task.sel.Cmp(rpcCtx, task.taskType, wi, wj)
 				if err != nil {
@@ -487,7 +498,7 @@ func (sh *scheduler) trySched() {
 			// AP/P1/P2 to the same worker
 			// C2 : TTCommit2
 			isLocal := true
-			if task.taskType == sealtasks.TTPreCommit1 || task.taskType == sealtasks.TTPreCommit2 {
+			if task.taskType == sealtasks.TTPreCommit1 || task.taskType == sealtasks.TTPreCommit2 || task.taskType == sealtasks.TTCommit2 {
 				if record, ok := taskAssignRecord[uint64(task.sector.ID.Number)]; ok {
 					isLocal = record == sh.workers[wid].info.Hostname
 				}

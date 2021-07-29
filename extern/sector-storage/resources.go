@@ -37,7 +37,7 @@ var ParallelNum uint64 = 92
 var ParallelDenom uint64 = 100
 
 var LO_AP_PARALLEL_NUM uint64 = 1
-var LO_P1_PARALLEL_NUM uint64 = 8
+var LO_P1_PARALLEL_NUM uint64 = 12
 var LO_P2_PARALLEL_NUM uint64 = 1
 var LO_C2_PARALLEL_NUM uint64 = 1
 
