@@ -496,9 +496,9 @@ func (sh *scheduler) trySched() {
 			log.Debugf("SCHED try assign sqi:%d sector %d to window %d", sqi, task.sector.ID.Number, wnd)
 
 			// AP/P1/P2 to the same worker
-			// C2 : TTCommit2
+			// C2 : TTCommit2 // || task.taskType == sealtasks.TTCommit2
 			isLocal := true
-			if task.taskType == sealtasks.TTPreCommit1 || task.taskType == sealtasks.TTPreCommit2 || task.taskType == sealtasks.TTCommit2 {
+			if task.taskType == sealtasks.TTPreCommit1 || task.taskType == sealtasks.TTPreCommit2 {
 				if record, ok := taskAssignRecord[uint64(task.sector.ID.Number)]; ok {
 					isLocal = record == sh.workers[wid].info.Hostname
 				}
