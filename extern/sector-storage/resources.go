@@ -37,9 +37,9 @@ var ParallelNum uint64 = 92
 var ParallelDenom uint64 = 100
 
 var LO_AP_PARALLEL_NUM uint64 = 1
-var LO_P1_PARALLEL_NUM uint64 = 12
+var LO_P1_PARALLEL_NUM uint64 = 10
 var LO_P2_PARALLEL_NUM uint64 = 1
-var LO_C2_PARALLEL_NUM uint64 = 1
+var LO_C2_PARALLEL_NUM uint64 = 2
 
 func init() {
 	tmp, err := strconv.ParseUint(os.Getenv("LO_P1_PARALLEL_NUM"), 0, 64)
