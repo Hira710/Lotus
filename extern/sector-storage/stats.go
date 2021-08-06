@@ -69,6 +69,7 @@ func (m *Manager) WorkerJobs() map[uuid.UUID][]storiface.WorkerJob {
 	m.workLk.Lock()
 	defer m.workLk.Unlock()
 
+
 	for id, work := range m.callToWork {
 		_, found := calls[id]
 		if found {
@@ -86,6 +87,9 @@ func (m *Manager) WorkerJobs() map[uuid.UUID][]storiface.WorkerJob {
 		}
 		if ws.Status == wsDone {
 			wait = storiface.RWRetDone
+		}
+		if !work.enabled {
+			wait = storiface.RWDISABLE
 		}
 
 		out[uuid.UUID{}] = append(out[uuid.UUID{}], storiface.WorkerJob{

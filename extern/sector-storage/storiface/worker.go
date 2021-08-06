@@ -53,6 +53,7 @@ const (
 	RWRetWait  = -1
 	RWReturned = -2
 	RWRetDone  = -3
+	RWDISABLE  = -4
 )
 
 type WorkerJob struct {

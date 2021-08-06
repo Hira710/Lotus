@@ -454,12 +454,13 @@ func (sh *scheduler) trySched() {
 				wj := sh.workers[wji]
 
 				rpcCtx, cancel := context.WithTimeout(task.ctx, SelectorTimeout)
+				log.Errorf("SelectorTimeout")
 				defer cancel()
 
 				// Sort AP
 				if task.taskType == sealtasks.TTAddPiece {
 					//Order by AP+P1
-					return (wi.active.p1ParallelNum + wi.active.apParallelNum) < (wj.active.p1ParallelNum + wi.active.apParallelNum)
+					return (wi.active.p1ParallelNum + wi.active.apParallelNum) < (wj.active.p1ParallelNum + wj.active.apParallelNum)
 				}
 
 				// TODO:Sort C2
