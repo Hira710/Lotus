@@ -212,9 +212,6 @@ var sealingJobsCmd = &cli.Command{
 			case l.RunWait == storiface.RWRetWait:
 				state = "ret-wait"
 			}
-			case l.RunWait == storiface.RWDISABLE:
-				state = "waiting..."
-			}
 			dur := "n/a"
 			if !l.Start.IsZero() {
 				dur = time.Now().Sub(l.Start).Truncate(time.Millisecond * 100).String()

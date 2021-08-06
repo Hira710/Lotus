@@ -89,10 +89,6 @@ func (m *Manager) WorkerJobs() map[uuid.UUID][]storiface.WorkerJob {
 			wait = storiface.RWRetDone
 		}
 
-		// if !work.enabled {
-		// 	wait = storiface.RWDISABLE
-		// }
-
 		out[uuid.UUID{}] = append(out[uuid.UUID{}], storiface.WorkerJob{
 			ID:       id,
 			Sector:   id.Sector,
