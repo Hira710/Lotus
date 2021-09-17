@@ -105,7 +105,7 @@ func (a *activeResources) canHandleRequest(needRes Resources, wid WorkerID, call
 	 	// 	log.Debugf("sched[C2]: not scheduling on worker %s for %s; GPU in use", wid, caller)
 	 	// 	return false
 	 	// }
-		 if len(res.GPUs) >= a.gpuUsedNum {
+		 if len(res.GPUs) >= int(a.gpuUsedNum) {
 			log.Debugf("sched[C2]: not scheduling on worker %s for %s; GPU in use", wid, caller)
 			return false
 		 }
