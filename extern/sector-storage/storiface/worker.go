@@ -47,6 +47,7 @@ type WorkerStats struct {
 
 	P1ParallelNum uint64 // P1 数量
 	P1ParallelMax uint64 // P1 最大数量
+	GpuUsedNum    uint64
 }
 
 const (
